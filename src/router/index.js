@@ -1,12 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import InventoryTable from '../components/InventoryTable.vue'
 
 const routes = [
-  {
-    path: '/',
-    name: 'InventoryTable',
-    component: InventoryTable
-  }
 ]
 
 const router = createRouter({

@@ -1,18 +1,25 @@
 <template>
   <div>
     <button @click="selectFile">Import Excel File</button>
-    <table>
-      <thead>
-        <tr>
-          <th v-for="header in headers" :key="header">{{ header }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(row, index) in rows" :key="index">
-          <td v-for="header in headers" :key="header">{{ row[header] }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-if="headers.length > 0" class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th v-for="header in headers" :key="header">{{ header }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(row, rowIndex) in rows" :key="rowIndex">
+            <td v-for="header in headers" :key="`${rowIndex}-${header}`">
+              {{ row[header] }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div v-else>
+      No data to display
+    </div>
   </div>
 </template>
 
@@ -38,7 +45,6 @@ export default {
 
         if (!canceled && filePaths.length > 0) {
           const buffer = await window.electron.readFile(filePaths[0]);
-          console.log('File Buffer:', buffer); // Log the buffer for debugging
           this.parseExcelData(buffer);
         }
       } catch (err) {
@@ -47,21 +53,28 @@ export default {
     },
     parseExcelData(buffer) {
       try {
-        const workbook = XLSX.read(buffer, { type: 'buffer' });
-
-        // Assuming first sheet is the one you want to parse
+        const data = new Uint8Array(buffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
-
+        
         // Convert the sheet data to JSON
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
         // Assuming the first row is the header
         this.headers = jsonData[0];
-        this.rows = jsonData.slice(1); // Exclude header row
+        
+        // Convert the remaining rows to objects
+        this.rows = jsonData.slice(1).map(row => {
+          const rowObject = {};
+          this.headers.forEach((header, index) => {
+            rowObject[header] = row[index];
+          });
+          return rowObject;
+        });
 
-        // Log jsonData for debugging
-        console.log('Parsed JSON Data:', jsonData);
+        console.log('Parsed JSON Data:', this.rows);
       } catch (err) {
         console.error('Error while parsing Excel:', err);
       }
@@ -71,5 +84,34 @@ export default {
 </script>
 
 <style scoped>
-/* Your component styling here */
+.table-container {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  background-color: #f2f2f2;
+  position: sticky;
+  top: 0;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:hover {
+  background-color: #f5f5f5;
+}
 </style>

@@ -5,6 +5,7 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
 const { enable } = require('@electron/remote/main');
 const path = require('path');
+const { ipcMain } = require('electron')
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Enable @electron/remote
@@ -20,6 +21,7 @@ async function createWindow() {
   const win = new BrowserWindow({
     width: 1000,
     height: 800,
+    icon: "dieor_logo.ico",
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'), // Preload script for context isolation
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION, // Disable node integration
@@ -87,3 +89,7 @@ if (isDevelopment) {
     });
   }
 }
+
+ipcMain.handle('read-file', async (event, filePath) => {
+  return fs.promises.readFile(filePath);
+});

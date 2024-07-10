@@ -5,8 +5,25 @@ module.exports = {
   configureWebpack: {
     resolve: {
       fallback: {
-        fs: false,  // Ensure 'fs' module is not used
-        path: require.resolve('path-browserify') // Use 'path-browserify' as fallback
+        fs: false,
+        path: require.resolve('path-browserify')
+      }
+    }
+  },
+  pluginOptions: {
+    electronBuilder: {
+      builderOptions: {
+        appId: "com.dieor.inventoryapp",
+        productName: "Dieor Inventory App",
+        win: {
+          icon: "public/icons/dieor_logo.ico"
+        },
+        mac: {
+          icon: "public/icons/dieor_logo.icns"
+        },
+        linux: {
+          icon: "public/icons/dieor_logo.png"
+        }
       }
     }
   }
