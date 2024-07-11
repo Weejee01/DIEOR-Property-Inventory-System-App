@@ -1,40 +1,119 @@
 <template>
   <div id="app">
-    <header class="app-header">
+    <header>
+      <div class="menu-icon" @click="toggleSidebar">
+        &#9776;
+      </div>
       <img src="@/assets/dieor_logo.png" alt="DIEOR Logo" class="logo">
       <h1>DIEOR Property Inventory System</h1>
     </header>
-    <SideMenu />
-    <div class="container mt-3">
+    <aside :class="{ open: isSidebarOpen }">
+      <div class="close-btn" @click="toggleSidebar">
+        &times;
+      </div>
+      <nav>
+        <router-link to="/side-menu">Side Menu</router-link>
+        <router-link to="/import-excel">Import Excel</router-link>
+      </nav>
+    </aside>
+    <div :class="{ 'main-content': true, shifted: isSidebarOpen }">
       <router-view />
-      <ImportExcel />
     </div>
   </div>
 </template>
 
 <script>
-import SideMenu from './components/SideMenu.vue'
-import ImportExcel from './components/ImportExcel.vue'
-
 export default {
-  components: {
-    SideMenu,
-    ImportExcel
+  data() {
+    return {
+      isSidebarOpen: false
+    };
+  },
+  methods: {
+    toggleSidebar() {
+      this.isSidebarOpen = !this.isSidebarOpen;
+    }
   }
 }
 </script>
 
 <style>
-.app-header {
+/* Add custom styles if needed */
+header {
   display: flex;
   align-items: center;
+  background-color: #333;
+  color: #fff;
   padding: 10px;
 }
 
-.logo {
-  height: 40px; /* Adjust this value to match your desired logo size */
-  margin-right: 15px; /* Adjust this value to set the space between the logo and the text */
+.menu-icon {
+  cursor: pointer;
+  font-size: 24px;
+  margin-right: 15px;
 }
 
-/* Add other custom styles if needed */
+.logo {
+  height: 50px;
+  margin-right: 10px;
+}
+
+h1 {
+  flex: 1;
+}
+
+aside {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 200px;
+  height: 100%;
+  background-color: #333;
+  color: #fff;
+  padding-top: 60px;
+  transform: translateX(-200px);
+  transition: transform 0.3s ease;
+  z-index: 1000;
+}
+
+aside.open {
+  transform: translateX(0);
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #fff;
+}
+
+aside nav {
+  display: flex;
+  flex-direction: column;
+  margin-top: 20px;
+}
+
+aside nav a {
+  padding: 10px;
+  text-decoration: none;
+  color: #42b983;
+}
+
+aside nav a.router-link-active {
+  font-weight: bold;
+}
+
+.main-content {
+  transition: margin-left 0.3s ease;
+}
+
+.main-content.shifted {
+  margin-left: 200px;
+}
+
+.container {
+  margin-top: 60px;
+}
 </style>

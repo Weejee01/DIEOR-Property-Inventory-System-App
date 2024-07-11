@@ -7,6 +7,7 @@ const { enable } = require('@electron/remote/main');
 const path = require('path');
 const { ipcMain } = require('electron')
 const isDevelopment = process.env.NODE_ENV !== 'production';
+const fs = require('fs').promises;
 
 // Enable @electron/remote
 enable(BrowserWindow);
@@ -62,14 +63,14 @@ app.on('activate', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  if (isDevelopment && !process.env.IS_TEST) {
-    // Install Vue Devtools if in development mode
-    try {
-      await installExtension(VUEJS3_DEVTOOLS);
-    } catch (e) {
-      console.error('Vue Devtools failed to install:', e.toString());
-    }
-  }
+  // if (isDevelopment && !process.env.IS_TEST) {
+  //   // Install Vue Devtools if in development mode
+  //   try {
+  //     await installExtension(VUEJS3_DEVTOOLS);
+  //   } catch (e) {
+  //     console.error('Vue Devtools failed to install:', e.toString());
+  //   }
+  // }
 
   console.log("Window created");
   createWindow();
@@ -90,6 +91,41 @@ if (isDevelopment) {
   }
 }
 
-ipcMain.handle('read-file', async (event, filePath) => {
-  return fs.promises.readFile(filePath);
+ipcMain.handle('save-json-file', async (event, data, filename) => {
+  // Get the path to the project root directory
+  const projectRoot = path.resolve(__dirname, '..');
+  const jsonFilesPath = path.join(projectRoot, 'jsonFiles');
+  const filePath = path.join(jsonFilesPath, filename);
+  
+  try {
+    // Ensure the jsonFiles directory exists
+    await fs.mkdir(jsonFilesPath, { recursive: true });
+    
+    // Write the file
+    await fs.writeFile(filePath, data, 'utf-8');
+    
+    console.log('File saved successfully:', filePath);
+    return filePath;
+  } catch (error) {
+    console.error('Error saving file:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('load-json-file', async (event, filename) => {
+  const projectRoot = path.resolve(__dirname, '..');
+  const jsonFilesPath = path.join(projectRoot, 'jsonFiles');
+  const filePath = path.join(jsonFilesPath, filename);
+  
+  try {
+    const data = await fs.readFile(filePath, 'utf-8');
+    return data;
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      console.log('No JSON file found');
+      return null;
+    }
+    console.error('Error loading JSON file:', error);
+    throw error;
+  }
 });
