@@ -21,7 +21,7 @@ async function createWindow() {
   const win = new BrowserWindow({
     width: 1000,
     height: 800,
-    icon: "dieor_logo.ico",
+    icon: "public/dieor_logo.ico",
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'), // Preload script for context isolation
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION, // Disable node integration
