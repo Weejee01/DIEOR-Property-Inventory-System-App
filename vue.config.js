@@ -16,13 +16,13 @@ module.exports = {
         appId: "com.dieor.inventoryapp",
         productName: "Dieor Inventory App",
         win: {
-          icon: "public/icons/dieor_logo.ico"
+          icon: "public/dieor_logo.ico"
         },
         mac: {
-          icon: "public/icons/dieor_logo.icns"
+          icon: "public/dieor_logo.icns"
         },
         linux: {
-          icon: "public/icons/dieor_logo.png"
+          icon: "public/dieor_logo.png"
         }
       }
     }

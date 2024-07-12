@@ -13,7 +13,7 @@
       </div>
       <nav>
         <router-link to="/side-menu">Side Menu</router-link>
-        <router-link to="/import-excel">Import Excel</router-link>
+        <router-link to="/import-excel">View Excel</router-link>
       </nav>
     </aside>
     <div :class="{ 'main-content': true, shifted: isSidebarOpen }">
