@@ -6,7 +6,7 @@
       <table>
         <thead>
           <tr>
-            <th>Actions</th>
+            <th class="actions-column">Actions</th>
             <th
               v-for="header in headers"
               :key="header"
@@ -243,6 +243,10 @@ tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
+.actions-column {
+  padding-right: 20px;
+}
+
 .table-row {
   position: relative;
 }
@@ -355,7 +359,7 @@ tr:nth-child(even) {
 }
 
 .cancel-button {
-  background-color: #dc3545; /* Red color for cancel */
+  background-color: #dc3545; /* Red color for cancellation */
   color: #fff;
   border: none;
   padding: 10px 20px;
