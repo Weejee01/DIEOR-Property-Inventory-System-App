@@ -11,34 +11,68 @@
       <div class="close-btn" @click="toggleSidebar">
         &times;
       </div>
-      <nav>
-        <router-link to="/side-menu">Side Menu</router-link>
-        <router-link to="/import-excel">View Excel</router-link>
-      </nav>
+      <SideMenu :sheets="sheets" @selectSheet="selectSheet" />
     </aside>
     <div :class="{ 'main-content': true, shifted: isSidebarOpen }">
-      <router-view />
+      <router-view @importComplete="handleImportComplete" />
     </div>
   </div>
 </template>
 
 <script>
+import SideMenu from "./components/SideMenu.vue";
+
 export default {
+  components: {
+    SideMenu,
+  },
   data() {
     return {
-      isSidebarOpen: false
+      isSidebarOpen: false,
+      sheets: [],
     };
+  },
+  async mounted() {
+    await this.loadExistingData();
   },
   methods: {
     toggleSidebar() {
       this.isSidebarOpen = !this.isSidebarOpen;
-    }
-  }
-}
+    },
+    async handleImportComplete(sheetNames) {
+      this.sheets = sheetNames;
+      if (sheetNames.length > 0) {
+        this.$router.push({ name: 'ViewExcel', params: { sheetName: sheetNames[0] } });
+      }
+    },
+    selectSheet(sheetName) {
+      if (sheetName === 'import') {
+        this.$router.push({ name: 'ImportExcel' });
+      } else {
+        this.$router.push({ name: 'ViewExcel', params: { sheetName } });
+      }
+    },
+    async loadExistingData() {
+      try {
+        const jsonData = await window.electron.loadJsonFile("imported_data.json");
+        if (jsonData) {
+          const allSheets = JSON.parse(jsonData);
+          this.sheets = Object.keys(allSheets);
+          if (this.sheets.length > 0) {
+            this.$router.push({ name: 'ViewExcel', params: { sheetName: this.sheets[0] } });
+          }
+        }
+      } catch (err) {
+        console.error("Error loading existing data:", err);
+      }
+    },
+  },
+};
 </script>
 
+
 <style>
-/* Add custom styles if needed */
+/* Add your existing styles here */
 header {
   display: flex;
   align-items: center;

@@ -1,17 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import SideMenu from '../components/SideMenu.vue'
 import ImportExcel from '../components/ImportExcel.vue'
+import ViewExcel from '../components/ViewExcel.vue'
 
 const routes = [
   {
-    path: '/side-menu',
-    name: 'SideMenu',
-    component: SideMenu
+    path: '/',
+    name: 'Home',
+    component: ViewExcel
   },
   {
-    path: '/import-excel',
+    path: '/import',
     name: 'ImportExcel',
     component: ImportExcel
+  },
+  {
+    path: '/sheet/:sheetName',
+    name: 'ViewExcel',
+    component: ViewExcel,
+    props: true
   }
 ]
 
