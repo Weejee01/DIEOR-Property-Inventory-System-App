@@ -9,7 +9,7 @@ const routes = [
     component: ViewExcel
   },
   {
-    path: '/import',
+    path: '/Import',
     name: 'ImportExcel',
     component: ImportExcel
   },

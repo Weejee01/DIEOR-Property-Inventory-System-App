@@ -2,15 +2,15 @@
 
 import { app, protocol, BrowserWindow } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
-import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
-const { enable } = require('@electron/remote/main');
+//import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
+import { initialize, enable } from '@electron/remote/main';
 const path = require('path');
-const { ipcMain } = require('electron')
+const { ipcMain, dialog } = require('electron')
 const isDevelopment = process.env.NODE_ENV !== 'production';
 const fs = require('fs').promises;
 
 // Enable @electron/remote
-enable(BrowserWindow);
+initialize();
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -30,6 +30,8 @@ async function createWindow() {
       enableRemoteModule: true // Enable remote module (temporary, to be replaced)
     }
   });
+
+  enable(win.webContents);
 
   if (isDevelopment && !process.env.IS_TEST) {
     // Load the url of the dev server if in development mode
@@ -63,14 +65,6 @@ app.on('activate', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  // if (isDevelopment && !process.env.IS_TEST) {
-  //   // Install Vue Devtools if in development mode
-  //   try {
-  //     await installExtension(VUEJS3_DEVTOOLS);
-  //   } catch (e) {
-  //     console.error('Vue Devtools failed to install:', e.toString());
-  //   }
-  // }
 
   console.log("Window created");
   createWindow();
@@ -128,4 +122,25 @@ ipcMain.handle('load-json-file', async (event, filename) => {
     console.error('Error loading JSON file:', error);
     throw error;
   }
+});
+
+ipcMain.handle('writeFile', async (event, filePath, data) => {
+  try {
+    await fs.writeFile(filePath, Buffer.from(data));
+    console.log('File written successfully:', filePath);
+    return true;
+  } catch (error) {
+    console.error('Error writing file:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('dialog:showOpenDialog', async (event, options) => {
+  const result = await dialog.showOpenDialog(options);
+  return result;
+});
+
+ipcMain.handle('dialog:showSaveDialog', async (event, options) => {
+  const result = await dialog.showSaveDialog(options);
+  return result;
 });

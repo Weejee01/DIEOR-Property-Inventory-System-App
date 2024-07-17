@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2>{{ currentSheet }}</h2>
+    <h2>{{ currentSheetName }}</h2>
     <button @click="showAddItemForm" class="add-button">Add Item</button>
     <div v-if="headers.length > 0" class="table-container">
       <table>
@@ -89,7 +89,7 @@ export default {
   props: ["sheetName"],
   data() {
     return {
-      currentSheet: this.sheetName,
+      currentSheetName: '',
       headers: [],
       rows: [],
       hoveredRow: null,
@@ -102,7 +102,10 @@ export default {
   watch: {
     sheetName: {
       immediate: true,
-      handler: "loadSheetData",
+      handler(newSheetName) {
+        this.currentSheetName = newSheetName;
+        this.loadSheetData();
+      }
     },
   },
   mounted() {
@@ -116,7 +119,7 @@ export default {
         const jsonData = await window.electron.loadJsonFile("imported_data.json");
         if (jsonData) {
           const allSheets = JSON.parse(jsonData);
-          const sheetData = allSheets[this.sheetName];
+          const sheetData = allSheets[this.currentSheetName];
           if (sheetData) {
             this.headers = sheetData.headers;
             this.rows = sheetData.rows;
