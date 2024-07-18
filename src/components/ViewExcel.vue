@@ -14,7 +14,9 @@
               class="sortable-header"
             >
               {{ header }}
-              <span class="sort-icon">↕</span>
+              <span class="sort-icon">
+                {{ getSortIcon(header) }}
+              </span>
             </th>
           </tr>
         </thead>
@@ -89,7 +91,7 @@ export default {
   props: ["sheetName"],
   data() {
     return {
-      currentSheetName: '',
+      currentSheetName: "",
       headers: [],
       rows: [],
       hoveredRow: null,
@@ -97,6 +99,7 @@ export default {
       addingItem: false,
       showDeleteConfirmation: false,
       rowToDelete: null,
+      sortConfig: {},
     };
   },
   watch: {
@@ -105,7 +108,7 @@ export default {
       handler(newSheetName) {
         this.currentSheetName = newSheetName;
         this.loadSheetData();
-      }
+      },
     },
   },
   mounted() {
@@ -114,9 +117,11 @@ export default {
   methods: {
     async loadSheetData() {
       if (!this.sheetName) return;
-      
+
       try {
-        const jsonData = await window.electron.loadJsonFile("imported_data.json");
+        const jsonData = await window.electron.loadJsonFile(
+          "imported_data.json"
+        );
         if (jsonData) {
           const allSheets = JSON.parse(jsonData);
           const sheetData = allSheets[this.currentSheetName];
@@ -145,12 +150,39 @@ export default {
       this.editingRow = null;
     },
     sortTable(header) {
+      // Reset sort configuration for other headers
+      for (let key in this.sortConfig) {
+        if (key !== header) {
+          this.sortConfig[key] = null;
+        }
+      }
+
+      // Toggle sort direction for the clicked header
+      if (!this.sortConfig[header] || this.sortConfig[header] === "desc") {
+        this.sortConfig[header] = "asc";
+      } else {
+        this.sortConfig[header] = "desc";
+      }
+
       this.rows.sort((a, b) => {
-        if (a[header] < b[header]) return -1;
-        if (a[header] > b[header]) return 1;
-        return 0;
+        let comparison = 0;
+        if (a[header] < b[header]) {
+          comparison = -1;
+        } else if (a[header] > b[header]) {
+          comparison = 1;
+        }
+
+        return this.sortConfig[header] === "desc"
+          ? comparison * -1
+          : comparison;
       });
+
       this.refreshTable();
+    },
+
+    getSortIcon(header) {
+      if (!this.sortConfig[header]) return "↕";
+      return this.sortConfig[header] === "asc" ? "↑" : "↓";
     },
     confirmDelete(rowIndex) {
       this.rowToDelete = rowIndex;
@@ -202,7 +234,6 @@ export default {
   },
 };
 </script>
-
 
 <style scoped>
 /* Existing styles */
@@ -392,5 +423,16 @@ tr:nth-child(even) {
 
 .add-button:hover {
   background-color: #0056b3;
+}
+
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sort-icon {
+  display: inline-block;
+  width: 1em;
+  margin-left: 0.5em;
 }
 </style>
