@@ -3,7 +3,7 @@
     <a v-for="sheet in sheets" :key="sheet" href="#" @click="$emit('selectSheet', sheet)">
       {{ sheet }}
     </a>
-    <a href="#" @click="$emit('selectSheet', 'import')">Import Excel</a>
+    <a href="#" @click="$emit('selectSheet', 'import')">Manage Spreadsheet</a>
   </nav>
 </template>
 

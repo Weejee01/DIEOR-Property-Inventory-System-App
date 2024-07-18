@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <header>
+    <header :class="{ 'shifted': isSidebarOpen }">
       <div class="menu-icon" @click="toggleSidebar">
         &#9776;
       </div>
@@ -79,8 +79,11 @@ header {
   background-color: #333;
   color: #fff;
   padding: 10px;
+  transition: margin-left 0.1s ease;
 }
-
+header.shifted {
+  margin-left: 200px; /* This should match the width of your sidebar */
+}
 .menu-icon {
   cursor: pointer;
   font-size: 24px;
@@ -106,7 +109,7 @@ aside {
   color: #fff;
   padding-top: 60px;
   transform: translateX(-200px);
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease;
   z-index: 1000;
 }
 
@@ -140,7 +143,7 @@ aside nav a.router-link-active {
 }
 
 .main-content {
-  transition: margin-left 0.3s ease;
+  transition: margin-left 0.1s ease;
 }
 
 .main-content.shifted {

@@ -186,7 +186,7 @@ export default {
           "imported_data.json"
         );
         const allSheets = JSON.parse(jsonData);
-        allSheets[this.currentSheet] = {
+        allSheets[this.currentSheetName] = {
           headers: this.headers,
           rows: this.rows,
         };
@@ -202,6 +202,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 /* Existing styles */
