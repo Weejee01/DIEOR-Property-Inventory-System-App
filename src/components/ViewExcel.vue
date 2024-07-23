@@ -405,7 +405,7 @@ tr:nth-child(even) {
 }
 
 .add-button {
-  background-color: #007bff;
+  background-color: #e65416;
   border: none;
   color: white;
   padding: 10px 20px;
@@ -419,7 +419,7 @@ tr:nth-child(even) {
 }
 
 .add-button:hover {
-  background-color: #0056b3;
+  background-color: #dc4a0c;
 }
 
 .modal {

@@ -1,17 +1,17 @@
 <template>
   <div id="app">
-    <header :class="{ 'shifted': isSidebarOpen }">
-      <div class="menu-icon" @click="toggleSidebar">
-        &#9776;
-      </div>
-      <img src="@/assets/dieor_logo.png" alt="DIEOR Logo" class="logo">
+    <header :class="{ shifted: isSidebarOpen }">
+      <div class="menu-icon" @click="toggleSidebar">&#9776;</div>
+      <img src="@/assets/dieor_logo.png" alt="DIEOR Logo" class="logo" />
       <h1>DIEOR Property Inventory System</h1>
     </header>
     <aside :class="{ open: isSidebarOpen }">
-      <div class="close-btn" @click="toggleSidebar">
-        &times;
-      </div>
-      <SideMenu :sheets="sheets" @selectSheet="selectSheet" />
+      <div class="close-btn" @click="toggleSidebar">&times;</div>
+      <SideMenu
+        :sheets="sheets"
+        :currentSheet="$route.params.sheetName || 'import'"
+        @selectSheet="selectSheet"
+      />
     </aside>
     <div :class="{ 'main-content': true, shifted: isSidebarOpen }">
       <router-view @importComplete="handleImportComplete" />
@@ -42,24 +42,32 @@ export default {
     async handleImportComplete(sheetNames) {
       this.sheets = sheetNames;
       if (sheetNames.length > 0) {
-        this.$router.push({ name: 'ViewExcel', params: { sheetName: sheetNames[0] } });
+        this.$router.push({
+          name: "ViewExcel",
+          params: { sheetName: sheetNames[0] },
+        });
       }
     },
     selectSheet(sheetName) {
-      if (sheetName === 'import') {
-        this.$router.push({ name: 'ImportExcel' });
+      if (sheetName === "import") {
+        this.$router.push({ name: "ImportExcel" });
       } else {
-        this.$router.push({ name: 'ViewExcel', params: { sheetName } });
+        this.$router.push({ name: "ViewExcel", params: { sheetName } });
       }
     },
     async loadExistingData() {
       try {
-        const jsonData = await window.electron.loadJsonFile("imported_data.json");
+        const jsonData = await window.electron.loadJsonFile(
+          "imported_data.json"
+        );
         if (jsonData) {
           const allSheets = JSON.parse(jsonData);
           this.sheets = Object.keys(allSheets);
           if (this.sheets.length > 0) {
-            this.$router.push({ name: 'ViewExcel', params: { sheetName: this.sheets[0] } });
+            this.$router.push({
+              name: "ViewExcel",
+              params: { sheetName: this.sheets[0] },
+            });
           }
         }
       } catch (err) {
@@ -69,7 +77,6 @@ export default {
   },
 };
 </script>
-
 
 <style>
 /* Add your existing styles here */
