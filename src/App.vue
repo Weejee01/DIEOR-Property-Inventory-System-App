@@ -144,6 +144,7 @@ aside nav a.router-link-active {
 
 .main-content {
   transition: margin-left 0.1s ease;
+  padding-left: 5px;
 }
 
 .main-content.shifted {

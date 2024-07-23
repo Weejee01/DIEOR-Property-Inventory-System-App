@@ -1,6 +1,28 @@
 <template>
   <div>
     <h2>{{ currentSheetName }}</h2>
+    <div class="search-container">
+      <div class="search-bar">
+        <input v-model="searchQuery" placeholder="Search..." @input="performSearch" />
+        <button v-if="searchQuery" @click="clearSearch" class="clear-search">✕</button>
+      </div>
+      <div class="column-select">
+        <button 
+          @click="toggleAllColumns" 
+          :class="{ selected: allColumnsSelected }"
+        >
+          All
+        </button>
+        <button 
+          v-for="header in headers" 
+          :key="header"
+          @click="toggleColumn(header)"
+          :class="{ selected: selectedColumns.includes(header) }"
+        >
+          {{ header }}
+        </button>
+      </div>
+    </div>
     <button @click="showAddItemForm" class="add-button">Add Item</button>
     <div v-if="headers.length > 0" class="table-container">
       <table>
@@ -22,7 +44,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="(row, rowIndex) in rows"
+            v-for="(row, rowIndex) in filteredRows"
             :key="rowIndex"
             @mouseover="hoveredRow = rowIndex"
             @mouseleave="hoveredRow = null"
@@ -91,7 +113,7 @@ export default {
   props: ["sheetName"],
   data() {
     return {
-      currentSheetName: "",
+      currentSheetName: '',
       headers: [],
       rows: [],
       hoveredRow: null,
@@ -100,7 +122,23 @@ export default {
       showDeleteConfirmation: false,
       rowToDelete: null,
       sortConfig: {},
+      searchQuery: '',
+      selectedColumns: [],
     };
+  },
+  computed: {
+    allColumnsSelected() {
+      return this.selectedColumns.length === this.headers.length;
+    },
+    filteredRows() {
+      if (!this.searchQuery || this.selectedColumns.length === 0) return this.rows;
+      
+      return this.rows.filter(row => {
+        return this.selectedColumns.some(column => {
+          return row[column] && row[column].toString().toLowerCase().includes(this.searchQuery.toLowerCase());
+        });
+      });
+    }
   },
   watch: {
     sheetName: {
@@ -108,7 +146,7 @@ export default {
       handler(newSheetName) {
         this.currentSheetName = newSheetName;
         this.loadSheetData();
-      },
+      }
     },
   },
   mounted() {
@@ -117,17 +155,16 @@ export default {
   methods: {
     async loadSheetData() {
       if (!this.sheetName) return;
-
+      
       try {
-        const jsonData = await window.electron.loadJsonFile(
-          "imported_data.json"
-        );
+        const jsonData = await window.electron.loadJsonFile("imported_data.json");
         if (jsonData) {
           const allSheets = JSON.parse(jsonData);
           const sheetData = allSheets[this.currentSheetName];
           if (sheetData) {
             this.headers = sheetData.headers;
             this.rows = sheetData.rows;
+            this.selectedColumns = []; // No columns selected by default
           }
         }
       } catch (err) {
@@ -150,18 +187,16 @@ export default {
       this.editingRow = null;
     },
     sortTable(header) {
-      // Reset sort configuration for other headers
       for (let key in this.sortConfig) {
         if (key !== header) {
           this.sortConfig[key] = null;
         }
       }
 
-      // Toggle sort direction for the clicked header
-      if (!this.sortConfig[header] || this.sortConfig[header] === "desc") {
-        this.sortConfig[header] = "asc";
+      if (!this.sortConfig[header] || this.sortConfig[header] === 'desc') {
+        this.sortConfig[header] = 'asc';
       } else {
-        this.sortConfig[header] = "desc";
+        this.sortConfig[header] = 'desc';
       }
 
       this.rows.sort((a, b) => {
@@ -172,17 +207,14 @@ export default {
           comparison = 1;
         }
 
-        return this.sortConfig[header] === "desc"
-          ? comparison * -1
-          : comparison;
+        return this.sortConfig[header] === 'desc' ? comparison * -1 : comparison;
       });
 
       this.refreshTable();
     },
-
     getSortIcon(header) {
-      if (!this.sortConfig[header]) return "↕";
-      return this.sortConfig[header] === "asc" ? "↑" : "↓";
+      if (!this.sortConfig[header]) return '↕';
+      return this.sortConfig[header] === 'asc' ? '↑' : '↓';
     },
     confirmDelete(rowIndex) {
       this.rowToDelete = rowIndex;
@@ -231,12 +263,82 @@ export default {
         console.error("Error saving data to JSON file:", err);
       }
     },
+    performSearch() {
+      // The actual filtering is done in the computed property
+    },
+    toggleColumn(header) {
+      const index = this.selectedColumns.indexOf(header);
+      if (index > -1) {
+        this.selectedColumns.splice(index, 1);
+      } else {
+        this.selectedColumns.push(header);
+      }
+    },
+    toggleAllColumns() {
+      if (this.allColumnsSelected) {
+        this.selectedColumns = [];
+      } else {
+        this.selectedColumns = [...this.headers];
+      }
+    },
+    clearSearch() {
+      this.searchQuery = '';
+    },
   },
 };
 </script>
 
 <style scoped>
-/* Existing styles */
+.search-container {
+  margin-bottom: 20px;
+}
+
+.search-bar {
+  position: relative;
+  width: 50%;
+  margin-bottom: 10px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 8px;
+  padding-right: 30px;
+}
+
+.clear-search {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #999;
+}
+
+.clear-search:hover {
+  color: #333;
+}
+
+.column-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.column-select button {
+  padding: 5px 10px;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.column-select button.selected {
+  background-color: #71797E;
+  color: white;
+}
 
 .table-container {
   overflow-x: auto;
@@ -249,8 +351,7 @@ table {
   width: 100%;
 }
 
-td,
-th {
+td, th {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: left;
@@ -282,129 +383,25 @@ tr:nth-child(even) {
   padding-right: 20px;
 }
 
-.table-row {
-  position: relative;
-}
-
-.table-row:hover {
-  background-color: #f5f5f5;
-}
-
-.edit-button-container {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: inherit;
-  padding-right: 10px;
+.edit-button, .delete-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1em;
+  border-radius: 50%;
+  transition: background-color 0.1s;
 }
 
 .edit-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1em;
   color: #007bff;
-  border-radius: 50%;
-  transition: background-color 0.1s;
-}
-
-.edit-button:hover {
-  background-color: #e9ecef;
 }
 
 .delete-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1em;
-  color: #dc3545; /* Red color for delete */
-  border-radius: 50%;
-  transition: background-color 0.1s;
+  color: #dc3545;
 }
 
-.delete-button:hover {
-  background-color: #f8d7da; /* Light red on hover */
-}
-
-.import-button {
-  background-color: #4caf50;
-  border: none;
-  color: white;
-  padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.import-button:hover {
-  background-color: #45a049;
-}
-
-/* Modal styles */
-.modal {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
-}
-
-.modal-content {
-  background-color: #fefefe;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.modal-content.thinner {
-  padding: 10px; /* Adjusted padding */
-  max-width: fit-content; /* Limit width to content width */
-  margin: 0 auto; /* Center horizontally */
-}
-
-.button-container {
-  margin-top: 10px; /* Add space between buttons */
-  display: flex;
-  justify-content: center; /* Center buttons horizontally */
-}
-
-.confirm-button {
-  background-color: #28a745; /* Blue color for confirmation */
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  border-radius: 4px;
-  margin-right: 10px;
-  width: calc(50% - 5px); /* Half width minus margin */
-}
-
-.confirm-button:hover {
-  opacity: 0.8;
-}
-
-.cancel-button {
-  background-color: #dc3545; /* Red color for cancellation */
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  border-radius: 4px;
-  width: calc(50% - 5px); /* Half width minus margin */
-}
-
-.cancel-button:hover {
-  opacity: 0.8;
+.edit-button:hover, .delete-button:hover {
+  background-color: #e9ecef;
 }
 
 .add-button {
@@ -425,14 +422,44 @@ tr:nth-child(even) {
   background-color: #0056b3;
 }
 
-.sortable-header {
-  cursor: pointer;
-  user-select: none;
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.sort-icon {
-  display: inline-block;
-  width: 1em;
-  margin-left: 0.5em;
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.button-container {
+  margin-top: 10px;
+}
+
+.confirm-button, .cancel-button {
+  padding: 8px 16px;
+  margin: 0 5px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.confirm-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.cancel-button {
+  background-color: #dc3545;
+  color: white;
 }
 </style>
