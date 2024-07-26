@@ -3,18 +3,24 @@
     <h2>{{ currentSheetName }}</h2>
     <div class="search-container">
       <div class="search-bar">
-        <input v-model="searchQuery" placeholder="Search..." @input="performSearch" />
-        <button v-if="searchQuery" @click="clearSearch" class="clear-search">✕</button>
+        <input
+          v-model="searchQuery"
+          placeholder="Search..."
+          @input="performSearch"
+        />
+        <button v-if="searchQuery" @click="clearSearch" class="clear-search">
+          ✕
+        </button>
       </div>
       <div class="column-select">
-        <button 
-          @click="toggleAllColumns" 
+        <button
+          @click="toggleAllColumns"
           :class="{ selected: allColumnsSelected }"
         >
           All
         </button>
-        <button 
-          v-for="header in headers" 
+        <button
+          v-for="header in headers"
           :key="header"
           @click="toggleColumn(header)"
           :class="{ selected: selectedColumns.includes(header) }"
@@ -23,7 +29,12 @@
         </button>
       </div>
     </div>
-    <button @click="showAddItemForm" class="add-button">Add Item</button>
+    <div class="button-container">
+      <button @click="showAddItemForm" class="add-button">Add Item</button>
+      <button @click="exportFilteredToExcel" class="export-button">
+        Export Filtered
+      </button>
+    </div>
     <div v-if="headers.length > 0" class="table-container">
       <table>
         <thead>
@@ -104,6 +115,7 @@
 <script>
 import EditExcel from "./EditExcel.vue";
 import AddItem from "./AddItem.vue";
+import * as XLSX from "xlsx";
 
 export default {
   components: {
@@ -113,7 +125,7 @@ export default {
   props: ["sheetName"],
   data() {
     return {
-      currentSheetName: '',
+      currentSheetName: "",
       headers: [],
       rows: [],
       hoveredRow: null,
@@ -122,7 +134,7 @@ export default {
       showDeleteConfirmation: false,
       rowToDelete: null,
       sortConfig: {},
-      searchQuery: '',
+      searchQuery: "",
       selectedColumns: [],
     };
   },
@@ -131,14 +143,21 @@ export default {
       return this.selectedColumns.length === this.headers.length;
     },
     filteredRows() {
-      if (!this.searchQuery || this.selectedColumns.length === 0) return this.rows;
-      
-      return this.rows.filter(row => {
-        return this.selectedColumns.some(column => {
-          return row[column] && row[column].toString().toLowerCase().includes(this.searchQuery.toLowerCase());
+      if (!this.searchQuery || this.selectedColumns.length === 0)
+        return this.rows;
+
+      return this.rows.filter((row) => {
+        return this.selectedColumns.some((column) => {
+          return (
+            row[column] &&
+            row[column]
+              .toString()
+              .toLowerCase()
+              .includes(this.searchQuery.toLowerCase())
+          );
         });
       });
-    }
+    },
   },
   watch: {
     sheetName: {
@@ -146,7 +165,7 @@ export default {
       handler(newSheetName) {
         this.currentSheetName = newSheetName;
         this.loadSheetData();
-      }
+      },
     },
   },
   mounted() {
@@ -155,9 +174,11 @@ export default {
   methods: {
     async loadSheetData() {
       if (!this.sheetName) return;
-      
+
       try {
-        const jsonData = await window.electron.loadJsonFile("imported_data.json");
+        const jsonData = await window.electron.loadJsonFile(
+          "imported_data.json"
+        );
         if (jsonData) {
           const allSheets = JSON.parse(jsonData);
           const sheetData = allSheets[this.currentSheetName];
@@ -193,10 +214,10 @@ export default {
         }
       }
 
-      if (!this.sortConfig[header] || this.sortConfig[header] === 'desc') {
-        this.sortConfig[header] = 'asc';
+      if (!this.sortConfig[header] || this.sortConfig[header] === "desc") {
+        this.sortConfig[header] = "asc";
       } else {
-        this.sortConfig[header] = 'desc';
+        this.sortConfig[header] = "desc";
       }
 
       this.rows.sort((a, b) => {
@@ -207,14 +228,16 @@ export default {
           comparison = 1;
         }
 
-        return this.sortConfig[header] === 'desc' ? comparison * -1 : comparison;
+        return this.sortConfig[header] === "desc"
+          ? comparison * -1
+          : comparison;
       });
 
       this.refreshTable();
     },
     getSortIcon(header) {
-      if (!this.sortConfig[header]) return '↕';
-      return this.sortConfig[header] === 'asc' ? '↑' : '↓';
+      if (!this.sortConfig[header]) return "↕";
+      return this.sortConfig[header] === "asc" ? "↑" : "↓";
     },
     confirmDelete(rowIndex) {
       this.rowToDelete = rowIndex;
@@ -282,7 +305,59 @@ export default {
       }
     },
     clearSearch() {
-      this.searchQuery = '';
+      this.searchQuery = "";
+    },
+    async exportFilteredToExcel() {
+      try {
+        // Create a new workbook
+        const workbook = XLSX.utils.book_new();
+
+        // Ensure all headers are included
+        const fullData = this.filteredRows.map((row) => {
+          const fullRow = {};
+          this.headers.forEach((header) => {
+            fullRow[header] = row[header] || ""; // Use empty string if the value is undefined
+          });
+          return fullRow;
+        });
+
+        // Convert the full data to a worksheet
+        const worksheet = XLSX.utils.json_to_sheet(fullData);
+
+        // Add the worksheet to the workbook
+        XLSX.utils.book_append_sheet(
+          workbook,
+          worksheet,
+          this.currentSheetName
+        );
+
+        // Generate a binary string
+        const excelBinaryString = XLSX.write(workbook, {
+          bookType: "xlsx",
+          type: "binary",
+        });
+
+        // Convert binary string to Uint8Array
+        const uint8Array = new Uint8Array(excelBinaryString.length);
+        for (let i = 0; i < excelBinaryString.length; i++) {
+          uint8Array[i] = excelBinaryString.charCodeAt(i) & 0xff;
+        }
+
+        // Use Electron's dialog to get the save file path
+        const result = await window.electron.dialog.showSaveDialog({
+          title: "Export Filtered Excel File",
+          defaultPath: `${this.currentSheetName}_filtered.xlsx`,
+          filters: [{ name: "Excel Files", extensions: ["xlsx"] }],
+        });
+
+        if (!result.canceled && result.filePath) {
+          // Use Electron's fs module to write the file
+          await window.electron.writeFile(result.filePath, uint8Array);
+          console.log("Filtered data exported successfully");
+        }
+      } catch (err) {
+        console.error("Error exporting filtered data to Excel:", err);
+      }
     },
   },
 };
@@ -336,7 +411,7 @@ export default {
 }
 
 .column-select button.selected {
-  background-color: #71797E;
+  background-color: #71797e;
   color: white;
 }
 
@@ -351,7 +426,8 @@ table {
   width: 100%;
 }
 
-td, th {
+td,
+th {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: left;
@@ -383,7 +459,8 @@ tr:nth-child(even) {
   padding-right: 20px;
 }
 
-.edit-button, .delete-button {
+.edit-button,
+.delete-button {
   background: none;
   border: none;
   cursor: pointer;
@@ -400,7 +477,8 @@ tr:nth-child(even) {
   color: #dc3545;
 }
 
-.edit-button:hover, .delete-button:hover {
+.edit-button:hover,
+.delete-button:hover {
   background-color: #e9ecef;
 }
 
@@ -445,7 +523,8 @@ tr:nth-child(even) {
   margin-top: 10px;
 }
 
-.confirm-button, .cancel-button {
+.confirm-button,
+.cancel-button {
   padding: 8px 16px;
   margin: 0 5px;
   border: none;
@@ -461,5 +540,28 @@ tr:nth-child(even) {
 .cancel-button {
   background-color: #dc3545;
   color: white;
+}
+.button-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.export-button {
+  background-color: #28a745;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.export-button:hover {
+  background-color: #218838;
 }
 </style>
