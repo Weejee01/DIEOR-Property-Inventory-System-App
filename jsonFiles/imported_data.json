@@ -3911,32 +3911,6 @@
         "UNITNAME": "ENGG - INDUSTRIAL ENGG AND OPERATION RESEARCH",
         "OFFICE-CODE": "COEINDUSTRIAL",
         "REMARKS": "Ie"
-      },
-      {
-        "REFERENCE_ID": "INDUST-123456",
-        "QTY": "1",
-        "UNIT": "Pc",
-        "NAME": "TEST ITEM",
-        "DESC1": "TESTER",
-        "DESC2": "ANOTHER TESTER",
-        "MRDATE": "",
-        "DACQD": "",
-        "PROPNO": "",
-        "CLASSNO": "",
-        "UCOST": "",
-        "TCOST": "",
-        "ENDUSER": "",
-        "OFFICIAL": "",
-        "LOCATION": "",
-        "ALLOTMENT": "",
-        "PROJECT": "",
-        "UNITNAME": "",
-        "OFFICE-CODE": "",
-        "REMARKS": "",
-        "CLUSTER NO.": "",
-        "INSURANCE": "",
-        "PROPERTY CARD": "",
-        "UPDATE COMMAND": ""
       }
     ]
   },

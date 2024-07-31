@@ -1,7 +1,7 @@
 <template>
   <div class="edit-modal">
     <div class="edit-content">
-      <h2>Edit Entry</h2>
+      <h2 class="form-title">Edit Entry</h2>
       <form @submit.prevent="saveEdit">
         <div v-for="header in headers" :key="header" class="form-group">
           <label :for="header">{{ header }}</label>
@@ -105,6 +105,11 @@ export default {
   display: flex;
   justify-content: flex-end;
   margin-top: 20px;
+  background-color: #E5E4E2;
+  padding: 10px;
+  border-top: 1px solid #A9A9A9;
+  text-align: center;
+  font-weight: bold;
 }
 
 .save-button, .cancel-button {
@@ -128,5 +133,12 @@ export default {
 
 .save-button:hover, .cancel-button:hover {
   opacity: 0.8;
+}
+.form-title {
+  background-color: #E5E4E2;
+  padding: 10px;
+  border-bottom: 1px solid #A9A9A9;
+  text-align: center;
+  font-weight: bold;
 }
 </style>

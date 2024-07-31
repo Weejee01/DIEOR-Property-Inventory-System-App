@@ -70,6 +70,9 @@ export default {
             });
           }
         }
+        else {
+          console.log('No JSON data found.');
+        }
       } catch (err) {
         console.error("Error loading existing data:", err);
       }

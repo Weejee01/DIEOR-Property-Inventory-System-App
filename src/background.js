@@ -24,7 +24,7 @@ async function createWindow() {
     height: 800,
     icon: "public/dieor_logo.ico",
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'), // Preload script for context isolation
+      preload: path.join(__dirname, '../src/preload.js'), // Preload script for context isolation
       nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION, // Disable node integration
       contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION, // Enable context isolation
       enableRemoteModule: true // Enable remote module (temporary, to be replaced)
