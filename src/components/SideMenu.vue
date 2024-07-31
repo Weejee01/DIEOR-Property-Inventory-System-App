@@ -1,28 +1,27 @@
 <template>
   <nav>
-    <a 
-      v-for="sheet in sheets" 
-      :key="sheet" 
-      href="#" 
-      @click="$emit('selectSheet', sheet)"
-      :class="{ active: currentSheet === sheet }"
-    >
-      {{ sheet }}
-    </a>
-    <a 
-      href="#" 
-      @click="$emit('selectSheet', 'import')"
+    <router-link
+      to="/Import"
       :class="{ active: currentSheet === 'import' }"
     >
       Manage Spreadsheet
-    </a>
+    </router-link>
+    <router-link
+      v-for="sheet in sheets"
+      :key="sheet"
+      :to="{ name: 'ViewExcel', params: { sheetName: sheet } }"
+      :class="{ active: currentSheet === sheet }"
+    >
+      {{ sheet }}
+    </router-link>
   </nav>
 </template>
 
+
 <script>
 export default {
-  props: ['sheets', 'currentSheet'],
-}
+  props: ["sheets", "currentSheet"],
+};
 </script>
 
 <style scoped>

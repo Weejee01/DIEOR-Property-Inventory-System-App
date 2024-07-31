@@ -163,33 +163,51 @@ export default {
     sheetName: {
       immediate: true,
       handler(newSheetName) {
-        this.currentSheetName = newSheetName;
-        this.loadSheetData();
+        if (newSheetName) {
+          this.currentSheetName = newSheetName;
+          this.loadSheetData();
+        }
       },
     },
   },
   mounted() {
-    this.loadSheetData();
+    if (this.sheetName) {
+      this.currentSheetName = this.sheetName;
+      this.loadSheetData();
+    }
   },
   methods: {
     async loadSheetData() {
-      if (!this.sheetName) return;
+      console.log("ViewExcel: Loading sheet data for", this.sheetName);
+      if (!this.sheetName) {
+        console.log("ViewExcel: No sheet name provided");
+        return;
+      }
 
       try {
         const jsonData = await window.electron.loadJsonFile(
           "imported_data.json"
         );
+        console.log(
+          "ViewExcel: JSON data loaded",
+          jsonData ? "successfully" : "is null"
+        );
         if (jsonData) {
           const allSheets = JSON.parse(jsonData);
           const sheetData = allSheets[this.currentSheetName];
           if (sheetData) {
+            console.log("ViewExcel: Sheet data found", this.currentSheetName);
             this.headers = sheetData.headers;
             this.rows = sheetData.rows;
             this.selectedColumns = []; // No columns selected by default
+          } else {
+            console.log("ViewExcel: No data for sheet", this.currentSheetName);
           }
+        } else {
+          console.log("ViewExcel: No JSON data found");
         }
       } catch (err) {
-        console.error("Error loading sheet data:", err);
+        console.error("ViewExcel: Error loading sheet data:", err);
       }
     },
     editRow(rowIndex) {

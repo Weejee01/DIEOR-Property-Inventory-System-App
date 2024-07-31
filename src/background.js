@@ -1,34 +1,40 @@
-'use strict';
+"use strict";
 
-import { app, protocol, BrowserWindow } from 'electron';
-import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
+import { app, protocol, BrowserWindow } from "electron";
+import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 //import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer';
-import { initialize, enable } from '@electron/remote/main';
-const path = require('path');
-const { ipcMain, dialog } = require('electron')
-const isDevelopment = process.env.NODE_ENV !== 'production';
-const fs = require('fs').promises;
+import { initialize, enable } from "@electron/remote/main";
+const path = require("path");
+const { ipcMain, dialog } = require("electron");
+const isDevelopment = process.env.NODE_ENV !== "production";
+const fs = require("fs").promises;
 
 // Enable @electron/remote
 initialize();
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
-  { scheme: 'app', privileges: { secure: true, standard: true } }
+  { scheme: "app", privileges: { secure: true, standard: true } },
 ]);
 
+function getAssetPath(asset) {
+  if (app.isPackaged) {
+    return path.join(process.resourcesPath, asset);
+  }
+  return path.join(__dirname, "..", asset);
+}
+
 async function createWindow() {
-  // Create the browser window.
   const win = new BrowserWindow({
     width: 1000,
     height: 800,
-    icon: "public/dieor_logo.ico",
+    icon:"public/dieor_logo.ico",
     webPreferences: {
-      preload: path.join(__dirname, '../src/preload.js'), // Preload script for context isolation
-      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION, // Disable node integration
-      contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION, // Enable context isolation
-      enableRemoteModule: true // Enable remote module (temporary, to be replaced)
-    }
+      contextIsolation: true,
+      preload: path.join(__dirname, "preload.js"),
+      nodeIntegration: false,
+      enableRemoteModule: false,
+    },
   });
 
   enable(win.webContents);
@@ -38,22 +44,22 @@ async function createWindow() {
     await win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
     if (!process.env.IS_TEST) win.webContents.openDevTools();
   } else {
-    createProtocol('app');
+    createProtocol("app");
     // Load the index.html when not in development
-    win.loadURL('app://./index.html');
+    win.loadURL("app://./index.html");
   }
 }
 
 // Quit when all windows are closed.
-app.on('window-all-closed', () => {
+app.on("window-all-closed", () => {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
+  if (process.platform !== "darwin") {
     app.quit();
   }
 });
 
-app.on('activate', () => {
+app.on("activate", () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
@@ -64,83 +70,78 @@ app.on('activate', () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', async () => {
-
+app.on("ready", async () => {
   console.log("Window created");
   createWindow();
 });
 
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {
-  if (process.platform === 'win32') {
-    process.on('message', (data) => {
-      if (data === 'graceful-exit') {
+  if (process.platform === "win32") {
+    process.on("message", (data) => {
+      if (data === "graceful-exit") {
         app.quit();
       }
     });
   } else {
-    process.on('SIGTERM', () => {
+    process.on("SIGTERM", () => {
       app.quit();
     });
   }
 }
 
-ipcMain.handle('save-json-file', async (event, data, filename) => {
-  // Get the path to the project root directory
-  const projectRoot = path.resolve(__dirname, '..');
-  const jsonFilesPath = path.join(projectRoot, 'jsonFiles');
+ipcMain.handle("save-json-file", async (event, data, filename) => {
+  const jsonFilesPath = getAssetPath("jsonFiles");
   const filePath = path.join(jsonFilesPath, filename);
-  
+
   try {
-    // Ensure the jsonFiles directory exists
     await fs.mkdir(jsonFilesPath, { recursive: true });
-    
-    // Write the file
-    await fs.writeFile(filePath, data, 'utf-8');
-    
-    console.log('File saved successfully:', filePath);
+    await fs.writeFile(filePath, data, "utf-8");
+    console.log("File saved successfully:", filePath);
     return filePath;
   } catch (error) {
-    console.error('Error saving file:', error);
+    console.error("Error saving file:", error);
     throw error;
   }
 });
 
-ipcMain.handle('load-json-file', async (event, filename) => {
-  const projectRoot = path.resolve(__dirname, '..');
-  const jsonFilesPath = path.join(projectRoot, 'jsonFiles');
+ipcMain.handle("load-json-file", async (event, filename) => {
+  const jsonFilesPath = getAssetPath("jsonFiles");
   const filePath = path.join(jsonFilesPath, filename);
-  
+
+  console.log("Main: Attempting to load JSON file:", filePath);
+
   try {
-    const data = await fs.readFile(filePath, 'utf-8');
+    const data = await fs.readFile(filePath, "utf-8");
+    console.log("Main: JSON file loaded successfully");
     return data;
   } catch (error) {
-    if (error.code === 'ENOENT') {
-      console.log('No JSON file found');
+    if (error.code === "ENOENT") {
+      console.log("Main: No JSON file found at", filePath);
       return null;
     }
-    console.error('Error loading JSON file:', error);
+    console.error("Main: Error loading JSON file:", error);
     throw error;
   }
 });
 
-ipcMain.handle('writeFile', async (event, filePath, data) => {
+ipcMain.handle("writeFile", async (event, filePath, data) => {
   try {
     await fs.writeFile(filePath, Buffer.from(data));
-    console.log('File written successfully:', filePath);
+    console.log("File written successfully:", filePath);
     return true;
   } catch (error) {
-    console.error('Error writing file:', error);
+    console.error("Error writing file:", error);
     throw error;
   }
 });
 
-ipcMain.handle('dialog:showOpenDialog', async (event, options) => {
+ipcMain.handle("dialog:showOpenDialog", async (event, options) => {
   const result = await dialog.showOpenDialog(options);
   return result;
 });
 
-ipcMain.handle('dialog:showSaveDialog', async (event, options) => {
+ipcMain.handle("dialog:showSaveDialog", async (event, options) => {
   const result = await dialog.showSaveDialog(options);
   return result;
 });

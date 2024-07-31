@@ -68,13 +68,16 @@ export default {
               name: "ViewExcel",
               params: { sheetName: this.sheets[0] },
             });
+          } else {
+            this.$router.push({ name: "ImportExcel" });
           }
-        }
-        else {
-          console.log('No JSON data found.');
+        } else {
+          console.log("No JSON data found.");
+          this.$router.push({ name: "ImportExcel" });
         }
       } catch (err) {
         console.error("Error loading existing data:", err);
+        this.$router.push({ name: "ImportExcel" });
       }
     },
   },

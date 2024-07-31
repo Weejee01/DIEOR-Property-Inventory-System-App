@@ -1,6 +1,7 @@
 const path = require("path");
 const webpack = require("webpack");
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const fs = require('fs');
 
 module.exports = {
   transpileDependencies: true,
@@ -11,14 +12,15 @@ module.exports = {
         __VUE_PROD_DEVTOOLS__: false,
         __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
       }),
-      // new CopyWebpackPlugin({
-      //   patterns: [
-      //     {
-      //       from: path.resolve(__dirname, "jsonFiles"),
-      //       to: "jsonFiles",
-      //     },
-      //   ],
-      // }),
+      new CopyWebpackPlugin({
+        patterns: [
+          {
+            from: path.resolve(__dirname, "jsonFiles"),
+            to: "jsonFiles",
+            noErrorOnMissing: true,
+          },
+        ],
+      }),
     ],
     resolve: {
       fallback: {
@@ -29,12 +31,14 @@ module.exports = {
   },
   pluginOptions: {
     electronBuilder: {
+      nodeIntegration: false,
+      contextIsolation: true,
       builderOptions: {
         extraResources: [
           {
-            from: path.join(__dirname, "jsonFiles"),
-            to: "jsonFiles",
-            filter: ["**/*"],
+            from: 'jsonFiles',
+            to: 'jsonFiles',
+            filter: ['**/*'],
           },
         ],
         appId: "com.dieor.inventoryapp",
@@ -53,3 +57,9 @@ module.exports = {
     },
   },
 };
+
+// Create jsonFiles directory if it doesn't exist
+const jsonFilesDir = path.join(__dirname, 'jsonFiles');
+if (!fs.existsSync(jsonFilesDir)) {
+  fs.mkdirSync(jsonFilesDir);
+}

@@ -1,29 +1,31 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import ImportExcel from '../components/ImportExcel.vue'
-import ViewExcel from '../components/ViewExcel.vue'
+import { createRouter, createWebHashHistory } from 'vue-router';
 
 const routes = [
   {
     path: '/',
-    name: 'Home',
-    component: ViewExcel
+    redirect: '/Import',
   },
   {
     path: '/Import',
     name: 'ImportExcel',
-    component: ImportExcel
+    component: () => import('../components/ImportExcel.vue'),
   },
   {
     path: '/sheet/:sheetName',
     name: 'ViewExcel',
-    component: ViewExcel,
-    props: true
-  }
-]
+    component: () => import('../components/ViewExcel.vue'),
+    props: true,
+  },
+];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
-  routes
-})
+  history: createWebHashHistory(),
+  routes,
+});
 
-export default router
+router.beforeEach((to, from, next) => {
+  console.log(`Router: Navigating from ${from.path} to ${to.path}`);
+  next();
+});
+
+export default router;
