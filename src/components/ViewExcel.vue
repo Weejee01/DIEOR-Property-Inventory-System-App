@@ -35,55 +35,57 @@
         Export Filtered
       </button>
     </div>
-    <div v-if="headers.length > 0" class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th class="actions-column">Actions</th>
-            <th
-              v-for="header in headers"
-              :key="header"
-              @click="sortTable(header)"
-              class="sortable-header"
+    <div v-if="headers.length > 0" class="table-wrapper">
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th class="actions-column">Actions</th>
+              <th
+                v-for="header in headers"
+                :key="header"
+                @click="sortTable(header)"
+                class="sortable-header"
+              >
+                {{ header }}
+                <span class="sort-icon">
+                  {{ getSortIcon(header) }}
+                </span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="(row, rowIndex) in filteredRows"
+              :key="rowIndex"
+              @mouseover="hoveredRow = rowIndex"
+              @mouseleave="hoveredRow = null"
             >
-              {{ header }}
-              <span class="sort-icon">
-                {{ getSortIcon(header) }}
-              </span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="(row, rowIndex) in filteredRows"
-            :key="rowIndex"
-            @mouseover="hoveredRow = rowIndex"
-            @mouseleave="hoveredRow = null"
-          >
-            <td>
-              <button
-                v-if="hoveredRow === rowIndex"
-                @click="editRow(rowIndex)"
-                class="edit-button"
-                title="Edit"
-              >
-                ✎
-              </button>
-              <button
-                v-if="hoveredRow === rowIndex"
-                @click="confirmDelete(rowIndex)"
-                class="delete-button"
-                title="Delete"
-              >
-                🗑️
-              </button>
-            </td>
-            <td v-for="header in headers" :key="`${rowIndex}-${header}`">
-              {{ row[header] }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <td>
+                <button
+                  v-if="hoveredRow === rowIndex"
+                  @click="editRow(rowIndex)"
+                  class="edit-button"
+                  title="Edit"
+                >
+                  ✎
+                </button>
+                <button
+                  v-if="hoveredRow === rowIndex"
+                  @click="confirmDelete(rowIndex)"
+                  class="delete-button"
+                  title="Delete"
+                >
+                  🗑️
+                </button>
+              </td>
+              <td v-for="header in headers" :key="`${rowIndex}-${header}`">
+                {{ row[header] }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     <div v-else>No data to display</div>
     <EditExcel
@@ -103,9 +105,11 @@
     <div v-if="showDeleteConfirmation" class="modal">
       <div class="modal-content thinner">
         <p>Are you sure you want to delete this row?</p>
-        <div class="button-container">
-          <button class="confirm-button" @click="deleteRow">Yes</button>
-          <button class="cancel-button" @click="cancelDelete">No</button>
+        <div class="confirm-cancel">
+          <div class="button-container">
+            <button class="confirm-button" @click="deleteRow">Yes</button>
+            <button class="cancel-button" @click="cancelDelete">No</button>
+          </div>
         </div>
       </div>
     </div>
@@ -211,7 +215,13 @@ export default {
       }
     },
     editRow(rowIndex) {
-      this.editingRow = rowIndex;
+      const rowToEdit = this.filteredRows[rowIndex];
+      const indexInFullDataset = this.rows.findIndex((row) =>
+        Object.keys(row).every((key) => row[key] === rowToEdit[key])
+      );
+      if (indexInFullDataset !== -1) {
+        this.editingRow = indexInFullDataset;
+      }
     },
     async saveEdit(editedRow) {
       this.rows[this.editingRow] = editedRow;
@@ -258,13 +268,19 @@ export default {
       return this.sortConfig[header] === "asc" ? "↑" : "↓";
     },
     confirmDelete(rowIndex) {
-      this.rowToDelete = rowIndex;
+      this.rowToDelete = this.filteredRows[rowIndex];
       this.showDeleteConfirmation = true;
     },
     async deleteRow() {
-      if (this.rowToDelete !== null) {
-        this.rows.splice(this.rowToDelete, 1);
-        await this.saveToJsonFile();
+      if (this.rowToDelete) {
+        const indexInFullDataset = this.rows.findIndex((row) =>
+          Object.keys(row).every((key) => row[key] === this.rowToDelete[key])
+        );
+        if (indexInFullDataset !== -1) {
+          this.rows.splice(indexInFullDataset, 1);
+          await this.saveToJsonFile();
+          this.refreshTable();
+        }
         this.rowToDelete = null;
         this.showDeleteConfirmation = false;
       }
@@ -433,30 +449,54 @@ export default {
   color: white;
 }
 
+.table-wrapper {
+  padding-right: 10px;
+  overflow-x: auto; /* Enable horizontal scroll */
+  overflow-y: hidden; /* Disable vertical scroll */
+  margin-bottom: 20px; /* Ensure there's space for the scrollbar */
+  position: relative; /* Position relative for the scrollbar */
+}
+
 .table-container {
-  overflow-x: auto;
-  max-width: 100%;
-  padding-bottom: 20px;
+  overflow-y: auto; /* Enable vertical scroll */
+  max-height: 60vh; /* Adjust max height as needed */
 }
 
 table {
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   width: 100%;
 }
 
-td,
-th {
-  border: 1px solid #ddd;
+td {
   padding: 8px;
   text-align: left;
   white-space: nowrap;
+  border-bottom: 1px solid #ddd; /* Ensure borders for table body cells */
+  border-right: 1px solid #ddd; /* Ensure borders for table body cells */
 }
 
+
 th {
+  padding: 8px;
+  text-align: left;
+  white-space: nowrap;
   background-color: #f2f2f2;
-  position: sticky;
   top: 0;
   cursor: pointer;
+  z-index: 2;
+  position: sticky;
+  border-top: 2px solid #ddd;
+  border-bottom: 2px solid #ddd; /* Ensure border for the sticky header */
+  border-right: 2px solid #ddd; /* Ensure border for the sticky header */
+}
+
+th:first-child, td:first-child {
+  border-left: 2px solid #ddd; /* Ensure left border for the first column */
+}
+
+th:last-child, td:last-child {
+  border-right: 1px solid #ddd; /* Ensure right border for the last column */
 }
 
 .sortable-header:hover {
@@ -559,6 +599,13 @@ tr:nth-child(even) {
   background-color: #dc3545;
   color: white;
 }
+
+.confirm-cancel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .button-container {
   display: flex;
   gap: 10px;

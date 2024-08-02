@@ -72,11 +72,10 @@ export default {
             this.$router.push({ name: "ImportExcel" });
           }
         } else {
-          console.log("No JSON data found.");
           this.$router.push({ name: "ImportExcel" });
         }
       } catch (err) {
-        console.error("Error loading existing data:", err);
+        console.error("App: Error loading existing data:", err);
         this.$router.push({ name: "ImportExcel" });
       }
     },
@@ -92,7 +91,7 @@ header {
   background-color: #333;
   color: #fff;
   padding: 10px;
-  transition: margin-left 0.1s ease;
+  transition: margin-left 0.1s;
 }
 header.shifted {
   margin-left: 200px; /* This should match the width of your sidebar */
@@ -122,7 +121,7 @@ aside {
   color: #fff;
   padding-top: 60px;
   transform: translateX(-200px);
-  transition: transform 0.2s ease;
+  transition: transform 0.1s;
   z-index: 1000;
 }
 
@@ -156,7 +155,7 @@ aside nav a.router-link-active {
 }
 
 .main-content {
-  transition: margin-left 0.1s ease;
+  transition: margin-left 0.1s;
   padding-left: 5px;
 }
 
