@@ -75,7 +75,7 @@ export default {
 
 .edit-content {
   background-color: white;
-  padding: 20px;
+  /* padding: 20px; */
   border-radius: 5px;
   max-width: 500px;
   width: 100%;
@@ -85,6 +85,10 @@ export default {
 
 .form-group {
   margin-bottom: 15px;
+  padding-left: 20px;
+  padding-right: 20px;
+  /* padding-top: 5px;
+  padding-bottom: 5px; */
 }
 
 .form-group label {
