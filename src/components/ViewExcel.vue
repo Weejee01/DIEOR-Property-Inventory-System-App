@@ -358,6 +358,24 @@ export default {
         // Convert the full data to a worksheet
         const worksheet = XLSX.utils.json_to_sheet(fullData);
 
+        // Calculate column widths
+        const colWidths = this.headers.map((header) => {
+          // Start with the header width
+          let maxLength = header.length;
+
+          // Calculate max width for each column
+          fullData.forEach(row => {
+            const cellValue = row[header] ? String(row[header]) : "";
+            maxLength = Math.max(maxLength, cellValue.length);
+          });
+
+          // Return the maximum width for this column (adding some padding)
+          return { wch: maxLength + 2 }; // Adjust padding as needed
+        });
+
+        // Set the calculated column widths
+        worksheet['!cols'] = colWidths;
+
         // Add the worksheet to the workbook
         XLSX.utils.book_append_sheet(
           workbook,
