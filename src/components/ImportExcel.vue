@@ -119,6 +119,24 @@ export default {
           });
 
           const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+          // Calculate column widths
+          const colWidths = headers.map((header, colIndex) => {
+            // Start with the header width
+            let maxLength = header.length;
+
+            // Calculate max width for each column
+            rows.forEach(row => {
+              const cellValue = row[colIndex] ? String(row[colIndex]) : "";
+              maxLength = Math.max(maxLength, cellValue.length);
+            });
+
+            // Return the maximum width for this column (adding padding)
+            return { wch: maxLength + 2 }; // Adjust padding as needed
+          });
+
+          // Set the calculated column widths
+          worksheet['!cols'] = colWidths;
           
           // Convert date cells to Excel numeric format
           headers.forEach((header, colIndex) => {
