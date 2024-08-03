@@ -476,7 +476,6 @@ td {
   border-right: 1px solid #ddd; /* Ensure borders for table body cells */
 }
 
-
 th {
   padding: 8px;
   text-align: left;
@@ -484,18 +483,35 @@ th {
   background-color: #f2f2f2;
   top: 0;
   cursor: pointer;
-  z-index: 2;
+  z-index: 2; /* Higher than the body cells but lower than the sticky columns */
   position: sticky;
   border-top: 2px solid #ddd;
   border-bottom: 2px solid #ddd; /* Ensure border for the sticky header */
   border-right: 2px solid #ddd; /* Ensure border for the sticky header */
 }
 
-th:first-child, td:first-child {
+th:first-child,
+td:first-child {
   border-left: 2px solid #ddd; /* Ensure left border for the first column */
+  position: sticky;
+  left: 0;
+  z-index: 3; /* Ensure higher z-index for the first column */
+  background-color: white;
+  border-right: 2px solid #ddd; /* Ensure border for the sticky column */
 }
 
-th:last-child, td:last-child {
+th.actions-column,
+td.actions-column {
+  padding-right: 20px;
+  position: sticky;
+  left: 0;
+  z-index: 4; /* Ensure the actions column is above the other columns */
+  background-color: white; /* Ensure the background color matches */
+  border-right: 2px solid #ddd; /* Ensure border for the sticky column */
+}
+
+th:last-child,
+td:last-child {
   border-right: 1px solid #ddd; /* Ensure right border for the last column */
 }
 
@@ -511,10 +527,6 @@ th:last-child, td:last-child {
 
 tr:nth-child(even) {
   background-color: #f9f9f9;
-}
-
-.actions-column {
-  padding-right: 20px;
 }
 
 .edit-button,
@@ -630,3 +642,10 @@ tr:nth-child(even) {
   background-color: #218838;
 }
 </style>
+
+
+
+
+
+
+
