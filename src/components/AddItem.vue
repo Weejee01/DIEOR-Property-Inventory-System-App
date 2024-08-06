@@ -38,7 +38,7 @@ export default {
   methods: {
     initializeNewRow() {
       return this.headers.reduce((obj, header) => {
-        obj[header] = '';
+        obj[header] = header.toLowerCase() === 'reference_id' ? 'INDUST-' : '';
         return obj;
       }, {});
     },

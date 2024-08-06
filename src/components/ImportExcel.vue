@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2>Import/Export Excel</h2>
+    <h2>Import/Export Excel File</h2>
     <div class="button-container">
       <button @click="selectFile" class="action-button import-button">
         Import Excel File
@@ -10,6 +10,27 @@
       </button>
     </div>
     <div v-if="status" class="status-message">{{ status }}</div>
+
+    <!-- Warning Dialog -->
+    <div v-if="showWarning" class="warning-dialog">
+      <div class="warning-content">
+        <p>
+          Warning: There is existing data. Do you want to export it before
+          importing a new file?
+        </p>
+        <div class="warning-buttons">
+          <button @click="exportToExcel" class="action-button export-button">
+            Export First
+          </button>
+          <button @click="confirmImport" class="action-button import-button">
+            Import Anyway
+          </button>
+          <button @click="cancelImport" class="action-button cancel-button">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -20,10 +41,35 @@ export default {
   data() {
     return {
       status: "",
+      hasExistingData: false,
+      showWarning: false,
     };
   },
+  mounted() {
+    this.checkExistingData();
+  },
   methods: {
+    async checkExistingData() {
+      try {
+        const jsonData = await window.electron.loadJsonFile(
+          "imported_data.json"
+        );
+        this.hasExistingData =
+          !!jsonData && Object.keys(JSON.parse(jsonData)).length > 0;
+      } catch (err) {
+        console.error("Error checking existing data:", err);
+        this.hasExistingData = false;
+      }
+    },
     async selectFile() {
+      if (this.hasExistingData) {
+        this.showWarning = true;
+      } else {
+        this.importFile();
+      }
+    },
+
+    async importFile() {
       try {
         const result = await window.electron.dialog.showOpenDialog({
           properties: ["openFile"],
@@ -93,6 +139,7 @@ export default {
         const jsonData = JSON.stringify(data, null, 2);
         await window.electron.saveJsonFile(jsonData, "imported_data.json");
         this.status = "Data imported successfully";
+        this.hasExistingData = true;
         this.$emit("importComplete", Object.keys(data));
       } catch (err) {
         console.error("Error saving data to JSON file:", err);
@@ -186,6 +233,14 @@ export default {
     isDateNumeric(value) {
       return typeof value === "number" && !isNaN(value) && value > 0;
     },
+    confirmImport() {
+      this.showWarning = false;
+      this.importFile();
+    },
+
+    cancelImport() {
+      this.showWarning = false;
+    },
   },
 };
 </script>
@@ -207,16 +262,46 @@ export default {
 }
 
 .import-button {
-  background-color: #4caf50;
+  background-color: #008cba;
 }
 
 .export-button {
-  background-color: #008cba;
+  background-color: #4caf50;
 }
 
 .status-message {
   text-align: center;
   margin-top: 20px;
   font-weight: bold;
+}
+
+.warning-dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.warning-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.warning-buttons {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.cancel-button {
+  background-color: #f44336;
 }
 </style>
