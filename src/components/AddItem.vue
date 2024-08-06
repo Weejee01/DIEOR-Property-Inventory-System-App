@@ -49,9 +49,7 @@ export default {
       this.$emit('cancel');
     },
     getInputType(header) {
-      if (header.toLowerCase().includes('date')) {
-        return 'date'
-      } else if (header.toLowerCase().includes('number') || header.toLowerCase().includes('amount')) {
+      if (header.toLowerCase().includes('number') || header.toLowerCase().includes('amount')) {
         return 'number'
       }
       return 'text'

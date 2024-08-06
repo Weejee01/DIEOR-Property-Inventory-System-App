@@ -42,7 +42,7 @@ module.exports = {
           },
         ],
         appId: "com.dieor.inventoryapp",
-        productName: "Dieor Inventory App",
+        productName: "Dieor Property Inventory App",
         win: {
           icon: "public/dieor_logo.ico",
         },

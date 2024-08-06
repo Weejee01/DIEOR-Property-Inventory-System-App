@@ -48,9 +48,7 @@ export default {
     },
     getInputType(header) {
       // You can customize this method to return different input types based on the header
-      if (header.toLowerCase().includes('date')) {
-        return 'date'
-      } else if (header.toLowerCase().includes('number') || header.toLowerCase().includes('amount')) {
+      if (header.toLowerCase().includes('number') || header.toLowerCase().includes('amount')) {
         return 'number'
       }
       return 'text'
@@ -87,8 +85,6 @@ export default {
   margin-bottom: 15px;
   padding-left: 20px;
   padding-right: 20px;
-  /* padding-top: 5px;
-  padding-bottom: 5px; */
 }
 
 .form-group label {

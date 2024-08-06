@@ -88,6 +88,19 @@
       </div>
     </div>
     <div v-else>No data to display</div>
+
+    <div v-if="showWarning" class="modal">
+      <div class="modal-content">
+        <p>{{ warningMessage }}</p>
+        <div class="dup-button-container">
+          <button @click="continueAction" class="confirm-button">
+            Continue
+          </button>
+          <button @click="cancelAction" class="cancel-button">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <EditExcel
       v-if="editingRow !== null"
       :row="rows[editingRow]"
@@ -140,6 +153,9 @@ export default {
       sortConfig: {},
       searchQuery: "",
       selectedColumns: [],
+      showWarning: false,
+      warningMessage: "",
+      warningCallback: null,
     };
   },
   computed: {
@@ -224,16 +240,20 @@ export default {
       }
     },
     async saveEdit(editedRow) {
-      this.rows[this.editingRow] = editedRow;
-      this.editingRow = null;
-      await this.saveToJsonFile();
-      this.refreshTable();
+      const shouldContinue = await this.checkDuplicateReferenceId(editedRow);
+      if (shouldContinue) {
+        this.rows[this.editingRow] = editedRow;
+        this.editingRow = null;
+        await this.saveToJsonFile();
+        this.refreshTable();
+      }
     },
     refreshTable() {
       this.rows = [...this.rows];
     },
     cancelEdit() {
       this.editingRow = null;
+      this.warningMessage = "";
     },
     sortTable(header) {
       for (let key in this.sortConfig) {
@@ -293,13 +313,17 @@ export default {
       this.addingItem = true;
     },
     async addItem(newRow) {
-      this.rows.push(newRow);
-      this.addingItem = false;
-      await this.saveToJsonFile();
-      this.refreshTable();
+      const shouldContinue = await this.checkDuplicateReferenceId(newRow);
+      if (shouldContinue) {
+        this.rows.push(newRow);
+        this.addingItem = false;
+        await this.saveToJsonFile();
+        this.refreshTable();
+      }
     },
     cancelAdd() {
       this.addingItem = false;
+      this.warningMessage = "";
     },
     async saveToJsonFile() {
       try {
@@ -364,7 +388,7 @@ export default {
           let maxLength = header.length;
 
           // Calculate max width for each column
-          fullData.forEach(row => {
+          fullData.forEach((row) => {
             const cellValue = row[header] ? String(row[header]) : "";
             maxLength = Math.max(maxLength, cellValue.length);
           });
@@ -374,7 +398,7 @@ export default {
         });
 
         // Set the calculated column widths
-        worksheet['!cols'] = colWidths;
+        worksheet["!cols"] = colWidths;
 
         // Add the worksheet to the workbook
         XLSX.utils.book_append_sheet(
@@ -409,6 +433,58 @@ export default {
         }
       } catch (err) {
         console.error("Error exporting filtered data to Excel:", err);
+      }
+    },
+
+    async checkDuplicateReferenceId(row) {
+      const referenceIdHeader = this.headers.find(
+        (header) => header.toLowerCase() === "reference_id"
+      );
+
+      if (!referenceIdHeader) {
+        console.warn("No 'reference_id' column found in the data.");
+        return Promise.resolve(true);
+      }
+
+      console.log(
+        "Checking for duplicate reference_id:",
+        row[referenceIdHeader]
+      );
+
+      const duplicateRow = this.rows.find(
+        (r) =>
+          r[referenceIdHeader] &&
+          r[referenceIdHeader].toString().toLowerCase() ===
+            row[referenceIdHeader].toString().toLowerCase() &&
+          r !== row
+      );
+
+      if (duplicateRow) {
+        this.showWarning = true;
+        this.warningMessage =
+          "Warning: This reference_id already exists. Do you want to continue?";
+        return new Promise((resolve) => {
+          this.warningCallback = resolve;
+        });
+      }
+
+      console.log("No duplicate reference_id found.");
+      return Promise.resolve(true);
+    },
+
+    continueAction() {
+      this.showWarning = false;
+      if (this.warningCallback) {
+        this.warningCallback(true);
+        this.warningCallback = null;
+      }
+    },
+
+    cancelAction() {
+      this.showWarning = false;
+      if (this.warningCallback) {
+        this.warningCallback(false);
+        this.warningCallback = null;
       }
     },
   },
@@ -607,6 +683,12 @@ tr:nth-child(even) {
   text-align: center;
 }
 
+.dup-button-container {
+  display: flex;
+  justify-content: center; /* Center the buttons */
+  margin-top: 10px;
+}
+
 .button-container {
   margin-top: 10px;
 }
@@ -659,11 +741,13 @@ tr:nth-child(even) {
 .export-button:hover {
   background-color: #218838;
 }
+
+.warning-message {
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
 </style>
-
-
-
-
-
-
-

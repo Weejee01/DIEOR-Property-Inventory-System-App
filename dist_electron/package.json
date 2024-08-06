@@ -1,6 +1,6 @@
 {
-  "name": "dieor-inventory-app",
-  "version": "0.1.0",
+  "name": "dieor-property-inventory-app",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
