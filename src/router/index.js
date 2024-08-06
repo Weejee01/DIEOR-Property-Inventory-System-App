@@ -1,17 +1,31 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import InventoryTable from '../components/InventoryTable.vue'
+import { createRouter, createWebHashHistory } from 'vue-router';
 
 const routes = [
   {
     path: '/',
-    name: 'InventoryTable',
-    component: InventoryTable
-  }
-]
+    redirect: '/Import',
+  },
+  {
+    path: '/Import',
+    name: 'ImportExcel',
+    component: () => import('../components/ImportExcel.vue'),
+  },
+  {
+    path: '/sheet/:sheetName',
+    name: 'ViewExcel',
+    component: () => import('../components/ViewExcel.vue'),
+    props: true,
+  },
+];
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
-  routes
-})
+  history: createWebHashHistory(),
+  routes,
+});
 
-export default router
+router.beforeEach((to, from, next) => {
+  console.log(`Router: Navigating from ${from.path} to ${to.path}`);
+  next();
+});
+
+export default router;
